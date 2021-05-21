@@ -17,11 +17,6 @@ pub struct SelectedBuilding {
     data: BuildData,
 }
 
-pub struct BuildFinishedEvent {
-    entity: Entity,
-    data: BuildData,
-}
-
 pub struct BuildTimer(pub Timer);
 
 pub struct HasConstruction(pub Entity);
@@ -42,7 +37,7 @@ pub fn placement(
         return;
     }
     let selected_building = selected_building.unwrap();
-    
+
     if input.just_pressed(MouseButton::Left) {
         let cell = cursor.0;
 
@@ -98,41 +93,25 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
 }
 
 pub fn building(
+    mut commands: Commands,
     time: Res<Time>,
-    mut writer: EventWriter<BuildFinishedEvent>,
-    mut query: Query<(Entity, &mut BuildTimer, &BuildData)>,
+    mut query: Query<(
+        Entity,
+        &mut Handle<ColorMaterial>,
+        &mut BuildTimer,
+        &BuildData,
+    )>,
 ) {
-    for (entity, mut timer, data) in query.iter_mut() {
+    for (entity, mut mat, mut timer, data) in query.iter_mut() {
         timer.0.tick(time.delta());
 
-        if timer.0.just_finished() {
-            writer.send(BuildFinishedEvent {
-                entity,
-                data: data.clone(),
-            });
+        if !timer.0.just_finished() {
+            continue;
         }
+
+        *mat = data.material.clone();
+
+        commands.entity(entity).remove::<BuildTimer>();
+        commands.entity(entity).remove::<BuildData>();
     }
 }
-
-pub fn construct(
-    mut commands: Commands,
-    mut reader: EventReader<BuildFinishedEvent>,
-    images: Res<Images>,
-    mut query: Query<(&mut Handle<ColorMaterial>, &BuildData)>,
-) {
-    for event in reader.iter() {
-        let entity = event.entity;
-
-        match query.get_mut(entity) {
-            Ok((mut mat, data)) => {
-                *mat = data.material.clone();
-        
-                commands.entity(entity).remove::<BuildTimer>();
-                commands.entity(entity).remove::<BuildData>();
-            }
-            Err(e) => { println!("{}", e); } // should never happen
-        }
-    }
-}
-
-

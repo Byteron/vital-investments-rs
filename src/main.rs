@@ -1,5 +1,4 @@
 use bevy::{prelude::*, utils::HashMap};
-use building::{BuildFinishedEvent, SelectedBuilding};
 use cursor::Cursor;
 use images::Images;
 use map::{GridSize, TileSize, Tiles};
@@ -16,7 +15,6 @@ pub struct Budget(pub i32);
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .add_event::<BuildFinishedEvent>()
         .init_resource::<Images>()
         .insert_resource(Budget(35000))
         .insert_resource(Cursor(IVec2::ZERO))
@@ -30,6 +28,5 @@ fn main() {
         .add_system(building::selection.system())
         .add_system(building::placement.system())
         .add_system(building::building.system())
-        .add_system(building::construct.system())
         .run();
 }
