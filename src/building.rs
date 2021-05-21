@@ -105,7 +105,7 @@ pub fn building(
     for (entity, mut timer, data) in query.iter_mut() {
         timer.0.tick(time.delta());
 
-        if timer.0.finished() {
+        if timer.0.just_finished() {
             writer.send(BuildFinishedEvent {
                 entity,
                 data: data.clone(),
@@ -123,10 +123,16 @@ pub fn construct(
     for event in reader.iter() {
         let entity = event.entity;
 
-        let (mut mat, data) = query.get_mut(entity).unwrap();
-        *mat = data.material.clone();
-
-        commands.entity(entity).remove::<BuildTimer>();
-        commands.entity(entity).remove::<BuildData>();
+        match query.get_mut(entity) {
+            Ok((mut mat, data)) => {
+                *mat = data.material.clone();
+        
+                commands.entity(entity).remove::<BuildTimer>();
+                commands.entity(entity).remove::<BuildData>();
+            }
+            Err(e) => { println!("{}", e); } // should never happen
+        }
     }
 }
+
+
