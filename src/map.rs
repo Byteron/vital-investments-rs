@@ -24,10 +24,10 @@ pub fn setup(
 
             if x % 4 == 0 || y % 4 == 0 {
                 occupied = true;
-                material = images.grass.clone();
+                material = images.get("grass");
             } else {
                 occupied = false;
-                material = images.concrete.clone();
+                material = images.get("concrete");
             }
 
             let entity = commands

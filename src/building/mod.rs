@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
+
+use std::fs;
 
 use crate::{
     bob::{BoardObjectBundle, Coords},
@@ -19,6 +21,39 @@ pub mod components;
 pub struct SelectedBuilding {
     build_time: f32,
     data: BuildingData,
+}
+
+pub struct BuildingDatas {
+    map: HashMap<String, BuildingData>,
+}
+
+impl BuildingDatas {
+    pub fn load(&mut self, key: &str, path: &str) {
+        let json = fs::read_to_string(path).unwrap();
+        let data: BuildingData = serde_json::from_str(json.as_str()).unwrap();
+
+        self.map.insert(key.to_string(), data);
+    }
+
+    pub fn get(&self, key: &str) -> BuildingData {
+        self.map
+            .get(key)
+            .expect(format!("building {} does not exist!", key).as_str())
+            .clone()
+    }
+}
+
+impl FromWorld for BuildingDatas {
+    fn from_world(_world: &mut World) -> Self {
+        let mut datas = BuildingDatas {
+            map: HashMap::default(),
+        };
+
+        datas.load("house", "data/buildings/house.json");
+        datas.load("market", "data/buildings/market.json");
+
+        datas
+    }
 }
 
 pub fn placement(
@@ -53,7 +88,7 @@ pub fn placement(
             .insert_bundle(BoardObjectBundle::new(
                 cell,
                 1,
-                images.site.clone(),
+                images.get("site"),
                 tile_size.0,
             ))
             .insert(BuildTimer(Timer::from_seconds(
@@ -70,18 +105,22 @@ pub fn placement(
     }
 }
 
-pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res<Images>) {
+pub fn selection(
+    mut commands: Commands,
+    input: Res<Input<KeyCode>>,
+    buildings: Res<BuildingDatas>,
+) {
     if input.just_pressed(KeyCode::Key0) {
         commands.remove_resource::<SelectedBuilding>();
     } else if input.just_pressed(KeyCode::Key1) {
         commands.insert_resource(SelectedBuilding {
             build_time: 3.0,
-            data: BuildingData::new_house(&images),
+            data: buildings.get("house"),
         });
     } else if input.just_pressed(KeyCode::Key2) {
         commands.insert_resource(SelectedBuilding {
             build_time: 6.0,
-            data: BuildingData::new_market(&images),
+            data: buildings.get("market"),
         });
     }
 }
@@ -89,6 +128,7 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
 pub fn building(
     mut commands: Commands,
     time: Res<Time>,
+    images: Res<Images>,
     mut query: Query<(
         Entity,
         &mut Handle<ColorMaterial>,
@@ -103,7 +143,7 @@ pub fn building(
             continue;
         }
 
-        *mat = data.material.clone();
+        *mat = images.get(data.image.as_str());
 
         commands
             .entity(entity)

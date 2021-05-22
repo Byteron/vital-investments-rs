@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use bevy::{prelude::*, utils::HashMap};
+use building::BuildingDatas;
 use cursor::Cursor;
 use date::{Date, DateTickEvent, DateTimer};
 use images::Images;
@@ -19,8 +20,9 @@ pub struct Budget(pub i32);
 fn main() {
     App::build()
         .add_plugins(DefaultPlugins)
-        .init_resource::<Images>()
         .add_event::<DateTickEvent>()
+        .init_resource::<Images>()
+        .init_resource::<BuildingDatas>()
         .insert_resource(Budget(35000))
         .insert_resource(Date(0))
         .insert_resource(DateTimer(Timer::new(Duration::from_secs_f32(1.0), true)))

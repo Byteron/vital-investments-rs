@@ -1,0 +1,8 @@
+{
+    "image": "house",
+    "consumer": true,
+    "upkeep": 1000,
+    "upkeep_tick": 7,
+    "revenue": 0,
+    "revenue_tick": 0
+}

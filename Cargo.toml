@@ -8,6 +8,8 @@ edition = "2018"
 
 [dependencies]
 bevy = "0.5"
+serde = "1.0"
+serde_json = "1.0"
 
 [profile.dev.package."*"]
 opt-level = 3

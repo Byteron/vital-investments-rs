@@ -1,0 +1,8 @@
+{
+    "image": "market",
+    "consumer": false,
+    "upkeep": 4000,
+    "upkeep_tick": 7,
+    "revenue": 2000,
+    "revenue_tick": 7
+}
