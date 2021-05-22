@@ -9,6 +9,11 @@ use crate::{
     Budget,
 };
 
+use self::components::{
+    BuildTimer, Consumer, HasConstruction, Occupied, Revenue, RevenueTickThreshold, Upkeep,
+    UpkeepTickThreshold,
+};
+
 #[derive(Clone)]
 pub struct BuildingData {
     material: Handle<ColorMaterial>,
@@ -19,21 +24,7 @@ pub struct BuildingData {
     revenue_tick: i32,
 }
 
-pub struct Upkeep(i32);
-
-pub struct Revenue(i32);
-
-pub struct RevenueTickThreshold(pub i32);
-
-pub struct UpkeepTickThreshold(pub i32);
-
-pub struct Consumer;
-
-pub struct BuildTimer(pub Timer);
-
-pub struct HasConstruction(pub Entity);
-
-pub struct Occupied;
+pub mod components;
 
 pub struct SelectedBuilding {
     build_time: f32,

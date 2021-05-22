@@ -1,6 +1,6 @@
-use bevy::{prelude::*, render::camera::Camera};
+use bevy::prelude::*;
 
-use crate::map::TileSize;
+use crate::{camera::MainCamera, map::TileSize};
 
 #[derive(Debug)]
 pub struct Cursor(pub IVec2);
@@ -9,7 +9,7 @@ pub fn update(
     mut cursor: ResMut<Cursor>,
     windows: Res<Windows>,
     tile_size: Res<TileSize>,
-    query: Query<&Transform, With<Camera>>,
+    query: Query<&Transform, With<MainCamera>>,
 ) {
     let window = windows.get_primary().unwrap();
 

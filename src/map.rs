@@ -1,6 +1,6 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::{bob::BoardObjectBundle, building::Occupied, images::Images};
+use crate::{bob::BoardObjectBundle, building::components::Occupied, images::Images};
 
 pub struct GridSize(pub IVec2);
 

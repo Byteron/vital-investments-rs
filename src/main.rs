@@ -28,6 +28,8 @@ fn main() {
         .insert_resource(GridSize(IVec2::splat(21)))
         .insert_resource(TileSize(IVec2::splat(64)))
         .insert_resource(Tiles(HashMap::default()))
+        .add_startup_system(setup.system())
+        .add_startup_system(date::setup.system())
         .add_startup_system(camera::setup.system())
         .add_startup_system(map::setup.system())
         .add_system(date::tick.system())
@@ -37,5 +39,10 @@ fn main() {
         .add_system(building::placement.system())
         .add_system(building::building.system())
         .add_system(building::tick.system())
+        .add_system(date::update_text.system())
         .run();
+}
+
+fn setup(mut commands: Commands) {
+    commands.spawn().insert_bundle(UiCameraBundle::default());
 }
