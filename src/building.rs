@@ -1,27 +1,38 @@
 use bevy::prelude::*;
 
 use crate::{
-    bob::BoardObjectBundle,
+    bob::{BoardObjectBundle, Coords},
     cursor::Cursor,
+    date::DateTickEvent,
     images::Images,
     map::{TileSize, Tiles},
+    Budget,
 };
 
 #[derive(Clone)]
-pub struct BuildData {
-    pub material: Handle<ColorMaterial>,
+pub struct BuildingData {
+    material: Handle<ColorMaterial>,
+    consumer: bool,
+    upkeep: i32,
+    revenue: i32,
 }
 
-pub struct SelectedBuilding {
-    build_time: f32,
-    data: BuildData,
-}
+pub struct Upkeep(i32);
+
+pub struct Revenue(i32);
+
+pub struct Consumer;
 
 pub struct BuildTimer(pub Timer);
 
 pub struct HasConstruction(pub Entity);
 
 pub struct Occupied;
+
+pub struct SelectedBuilding {
+    build_time: f32,
+    data: BuildingData,
+}
 
 pub fn placement(
     mut commands: Commands,
@@ -78,15 +89,21 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
     } else if input.just_pressed(KeyCode::Key1) {
         commands.insert_resource(SelectedBuilding {
             build_time: 1.5,
-            data: BuildData {
+            data: BuildingData {
                 material: images.house.clone(),
+                consumer: true,
+                upkeep: 1000,
+                revenue: 0,
             },
         });
     } else if input.just_pressed(KeyCode::Key2) {
         commands.insert_resource(SelectedBuilding {
             build_time: 4.5,
-            data: BuildData {
+            data: BuildingData {
                 material: images.market.clone(),
+                consumer: false,
+                upkeep: 5000,
+                revenue: 2000,
             },
         });
     }
@@ -99,7 +116,7 @@ pub fn building(
         Entity,
         &mut Handle<ColorMaterial>,
         &mut BuildTimer,
-        &BuildData,
+        &BuildingData,
     )>,
 ) {
     for (entity, mut mat, mut timer, data) in query.iter_mut() {
@@ -111,7 +128,70 @@ pub fn building(
 
         *mat = data.material.clone();
 
-        commands.entity(entity).remove::<BuildTimer>();
-        commands.entity(entity).remove::<BuildData>();
+        commands
+            .entity(entity)
+            .remove::<BuildTimer>()
+            .remove::<BuildingData>();
+
+        if data.consumer {
+            commands.entity(entity).insert(Consumer);
+        }
+
+        if data.revenue > 0 {
+            commands.entity(entity).insert(Revenue(data.revenue));
+        }
+
+        if data.upkeep > 0 {
+            commands.entity(entity).insert(Upkeep(data.upkeep));
+        }
+    }
+}
+
+pub fn tick(
+    mut budget: ResMut<Budget>,
+    tiles: Res<Tiles>,
+    mut reader: EventReader<DateTickEvent>,
+    consumers: Query<&Consumer>,
+    revenues: Query<(&Revenue, &Coords)>,
+    upkeeps: Query<&Upkeep>,
+    constructions: Query<&HasConstruction>,
+) {
+    // for each date tick event
+    for _ in reader.iter() {
+        let prev = budget.0;
+
+        // add revenue for each consumer building on a neighbored tile
+        for (revenue, coords) in revenues.iter() {
+            for n_cell in coords.get_neighbors().iter() {
+                // if neighbored cell has a tile, assign tile, else continue with next loop iteration
+                let tile = match tiles.0.get(n_cell) {
+                    Some(tile) => tile,
+                    None => continue,
+                };
+
+                // if neighbored tile has construction, assign it's entity, else continue with next loop iteration
+                let building_entity = match constructions.get(*tile) {
+                    Ok(has_construction) => has_construction.0,
+                    Err(_) => continue,
+                };
+
+                // add revenue if building has consumer component
+                if consumers.get(building_entity).is_ok() {
+                    budget.0 += revenue.0;
+                }
+            }
+        }
+
+        // subtract all upkeeps from budget
+        for upkeep in upkeeps.iter() {
+            budget.0 -= upkeep.0;
+        }
+
+        println!(
+            "Old: {}, New: {}, Diff: {}",
+            prev,
+            budget.0,
+            budget.0 - prev
+        );
     }
 }
