@@ -10,19 +10,9 @@ use crate::{
 };
 
 use self::components::{
-    BuildTimer, Consumer, HasConstruction, Occupied, Revenue, RevenueTickThreshold, Upkeep,
-    UpkeepTickThreshold,
+    BuildTimer, BuildingData, Consumer, HasConstruction, Occupied, Revenue, RevenueTickThreshold,
+    Upkeep, UpkeepTickThreshold,
 };
-
-#[derive(Clone)]
-pub struct BuildingData {
-    material: Handle<ColorMaterial>,
-    consumer: bool,
-    upkeep: i32,
-    revenue: i32,
-    upkeep_tick: i32,
-    revenue_tick: i32,
-}
 
 pub mod components;
 
@@ -85,27 +75,13 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
         commands.remove_resource::<SelectedBuilding>();
     } else if input.just_pressed(KeyCode::Key1) {
         commands.insert_resource(SelectedBuilding {
-            build_time: 1.5,
-            data: BuildingData {
-                material: images.house.clone(),
-                consumer: true,
-                upkeep: 1000,
-                revenue: 0,
-                upkeep_tick: 7,
-                revenue_tick: 7,
-            },
+            build_time: 3.0,
+            data: BuildingData::new_house(&images),
         });
     } else if input.just_pressed(KeyCode::Key2) {
         commands.insert_resource(SelectedBuilding {
-            build_time: 4.5,
-            data: BuildingData {
-                material: images.market.clone(),
-                consumer: false,
-                upkeep: 5000,
-                revenue: 2000,
-                upkeep_tick: 7,
-                revenue_tick: 7,
-            },
+            build_time: 6.0,
+            data: BuildingData::new_market(&images),
         });
     }
 }
