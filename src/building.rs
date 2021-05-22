@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     bob::{BoardObjectBundle, Coords},
     cursor::Cursor,
-    date::DateTickEvent,
+    date::{Date, DateTickEvent},
     images::Images,
     map::{TileSize, Tiles},
     Budget,
@@ -15,11 +15,17 @@ pub struct BuildingData {
     consumer: bool,
     upkeep: i32,
     revenue: i32,
+    upkeep_tick: i32,
+    revenue_tick: i32,
 }
 
 pub struct Upkeep(i32);
 
 pub struct Revenue(i32);
+
+pub struct RevenueTickThreshold(pub i32);
+
+pub struct UpkeepTickThreshold(pub i32);
 
 pub struct Consumer;
 
@@ -94,6 +100,8 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
                 consumer: true,
                 upkeep: 1000,
                 revenue: 0,
+                upkeep_tick: 7,
+                revenue_tick: 7,
             },
         });
     } else if input.just_pressed(KeyCode::Key2) {
@@ -104,6 +112,8 @@ pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, images: Res
                 consumer: false,
                 upkeep: 5000,
                 revenue: 2000,
+                upkeep_tick: 7,
+                revenue_tick: 7,
             },
         });
     }
@@ -138,22 +148,29 @@ pub fn building(
         }
 
         if data.revenue > 0 {
-            commands.entity(entity).insert(Revenue(data.revenue));
+            commands
+                .entity(entity)
+                .insert(Revenue(data.revenue))
+                .insert(RevenueTickThreshold(data.revenue_tick));
         }
 
         if data.upkeep > 0 {
-            commands.entity(entity).insert(Upkeep(data.upkeep));
+            commands
+                .entity(entity)
+                .insert(Upkeep(data.upkeep))
+                .insert(UpkeepTickThreshold(data.upkeep_tick));
         }
     }
 }
 
 pub fn tick(
     mut budget: ResMut<Budget>,
+    date: Res<Date>,
     tiles: Res<Tiles>,
     mut reader: EventReader<DateTickEvent>,
     consumers: Query<&Consumer>,
-    revenues: Query<(&Revenue, &Coords)>,
-    upkeeps: Query<&Upkeep>,
+    revenues: Query<(&Revenue, &RevenueTickThreshold, &Coords)>,
+    upkeeps: Query<(&Upkeep, &UpkeepTickThreshold)>,
     constructions: Query<&HasConstruction>,
 ) {
     // for each date tick event
@@ -161,7 +178,11 @@ pub fn tick(
         let prev = budget.0;
 
         // add revenue for each consumer building on a neighbored tile
-        for (revenue, coords) in revenues.iter() {
+        for (revenue, threshold, coords) in revenues.iter() {
+            if date.0 % threshold.0 != 0 {
+                continue;
+            }
+
             for n_cell in coords.get_neighbors().iter() {
                 // if neighbored cell has a tile, assign tile, else continue with next loop iteration
                 let tile = match tiles.0.get(n_cell) {
@@ -183,7 +204,11 @@ pub fn tick(
         }
 
         // subtract all upkeeps from budget
-        for upkeep in upkeeps.iter() {
+        for (upkeep, threshold) in upkeeps.iter() {
+            if date.0 % threshold.0 != 0 {
+                continue;
+            }
+
             budget.0 -= upkeep.0;
         }
 
