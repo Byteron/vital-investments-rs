@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 
-use crate::map::{GridSize, TileSize};
+use crate::game::map::{GridSize, TileSize};
+
+use super::Cleanup;
 
 pub struct MainCamera;
 
@@ -11,7 +13,8 @@ pub fn setup(mut commands: Commands, grid_size: Res<GridSize>, tile_size: Res<Ti
         .spawn()
         .insert_bundle(OrthographicCameraBundle::new_2d())
         .insert(Transform::from_xyz(center.x, center.y, 1000.0 - 0.1))
-        .insert(MainCamera);
+        .insert(MainCamera)
+        .insert(Cleanup);
 }
 
 pub fn movement(

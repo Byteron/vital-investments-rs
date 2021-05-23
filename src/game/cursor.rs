@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{camera::MainCamera, map::TileSize};
+use crate::game::{camera::MainCamera, map::TileSize};
 
 #[derive(Debug)]
 pub struct Cursor(pub IVec2);

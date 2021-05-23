@@ -1,59 +1,28 @@
-use bevy::{prelude::*, utils::HashMap};
-
-use std::fs;
+use bevy::prelude::*;
 
 use crate::{
-    bob::{BoardObjectBundle, Coords},
-    cursor::Cursor,
-    date::{Date, DateTickEvent},
+    buildings::{BuildingData, Buildings},
+    game::{
+        bob::{BoardObjectBundle, Coords},
+        cursor::Cursor,
+        date::{Date, DateTickEvent},
+        map::{TileSize, Tiles},
+    },
     images::Images,
-    map::{TileSize, Tiles},
-    Budget,
 };
 
 use self::components::{
-    BuildTimer, BuildingData, Consumer, HasConstruction, Occupied, Revenue, RevenueTickThreshold,
-    Upkeep, UpkeepTickThreshold,
+    BuildTimer, Consumer, HasConstruction, Occupied, Revenue, RevenueTickThreshold, Upkeep,
+    UpkeepTickThreshold,
 };
+
+use super::{Budget, Cleanup};
 
 pub mod components;
 
 pub struct SelectedBuilding {
     build_time: f32,
     data: BuildingData,
-}
-
-pub struct BuildingDatas {
-    map: HashMap<String, BuildingData>,
-}
-
-impl BuildingDatas {
-    pub fn load(&mut self, key: &str, path: &str) {
-        let json = fs::read_to_string(path).unwrap();
-        let data: BuildingData = serde_json::from_str(json.as_str()).unwrap();
-
-        self.map.insert(key.to_string(), data);
-    }
-
-    pub fn get(&self, key: &str) -> BuildingData {
-        self.map
-            .get(key)
-            .expect(format!("building {} does not exist!", key).as_str())
-            .clone()
-    }
-}
-
-impl FromWorld for BuildingDatas {
-    fn from_world(_world: &mut World) -> Self {
-        let mut datas = BuildingDatas {
-            map: HashMap::default(),
-        };
-
-        datas.load("house", "data/buildings/house.json");
-        datas.load("market", "data/buildings/market.json");
-
-        datas
-    }
 }
 
 pub fn placement(
@@ -96,6 +65,7 @@ pub fn placement(
                 false,
             )))
             .insert(selected_building.data.clone())
+            .insert(Cleanup)
             .id();
 
         commands
@@ -105,11 +75,7 @@ pub fn placement(
     }
 }
 
-pub fn selection(
-    mut commands: Commands,
-    input: Res<Input<KeyCode>>,
-    buildings: Res<BuildingDatas>,
-) {
+pub fn selection(mut commands: Commands, input: Res<Input<KeyCode>>, buildings: Res<Buildings>) {
     if input.just_pressed(KeyCode::Key0) {
         commands.remove_resource::<SelectedBuilding>();
     } else if input.just_pressed(KeyCode::Key1) {

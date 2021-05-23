@@ -1,6 +1,11 @@
 use bevy::{prelude::*, utils::HashMap};
 
-use crate::{bob::BoardObjectBundle, building::components::Occupied, images::Images};
+use crate::{
+    game::{bob::BoardObjectBundle, building::components::Occupied},
+    images::Images,
+};
+
+use super::Cleanup;
 
 pub struct GridSize(pub IVec2);
 
@@ -33,6 +38,7 @@ pub fn setup(
             let entity = commands
                 .spawn()
                 .insert_bundle(BoardObjectBundle::new(cell, 0, material, tile_size.0))
+                .insert(Cleanup)
                 .id();
 
             if occupied {

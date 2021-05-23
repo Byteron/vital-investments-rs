@@ -17,13 +17,3 @@ pub struct Consumer;
 pub struct Occupied;
 
 pub struct BuildTimer(pub Timer);
-
-#[derive(Deserialize, Serialize, Clone)]
-pub struct BuildingData {
-    pub image: String,
-    pub consumer: bool,
-    pub upkeep: i32,
-    pub upkeep_tick: i32,
-    pub revenue: i32,
-    pub revenue_tick: i32,
-}

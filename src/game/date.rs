@@ -1,9 +1,10 @@
 use bevy::prelude::*;
 
+use super::Cleanup;
+
 pub struct Date(pub i32);
 pub struct DateTimer(pub Timer);
 pub struct DateTickEvent(pub i32);
-
 pub struct DateText;
 
 pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
@@ -34,7 +35,8 @@ pub fn setup(mut commands: Commands, assets: Res<AssetServer>) {
             ),
             ..Default::default()
         })
-        .insert(DateText);
+        .insert(DateText)
+        .insert(Cleanup);
 }
 
 pub fn update_text(
