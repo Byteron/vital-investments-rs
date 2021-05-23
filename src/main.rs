@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{ecs::component::Component, prelude::*};
 use buildings::Buildings;
 use game::GamePlugin;
 use images::Images;
@@ -25,6 +25,6 @@ fn main() {
 
 pub fn despawn_all<T: Component>(mut commands: Commands, query: Query<Entity, With<T>>) {
     for e in query.iter() {
-        commands.despawn_recursive(e);
+        commands.entity(e).despawn_recursive();
     }
 }
